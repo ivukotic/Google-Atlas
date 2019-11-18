@@ -661,7 +661,7 @@ app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
                 query: {
                     bool: {
                         must: [
-                            { wildcard: { computingsite: `*${sessionAttributes.my_site_id}*` } },
+                            { wildcard: { computingsite: `*${conv.user.storage.my_site}*` } },
                             { range: { modificationtime: { gte: start_in_utc } } }
                         ],
                     }
@@ -692,7 +692,7 @@ app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
             details += sbuckets[i].key + ' ' + sbuckets[i].doc_count.toString() + ',\n';
             totjobs += sbuckets[i].doc_count;
         }
-        speechText += `,\nsite ${sessionAttributes.my_site},\nhad ${totjobs} jobs.\n`
+        speechText += `,\nsite ${conv.user.storage.my_site},\nhad ${totjobs} jobs.\n`
         if (totjobs > 0) {
             speechText += details;
         }
