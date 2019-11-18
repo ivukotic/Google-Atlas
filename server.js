@@ -572,25 +572,25 @@ const ErrorHandler = {
 };
 
 
-const skill = Alexa.SkillBuilders.custom()
-    .addRequestHandlers(
-        LaunchRequestHandler,
-        SetUsernameIntentHandler,
-        SetSiteIntentHandler,
-        GetSiteStatusIntentHandler,
-        JobsIntentHandler,
-        TasksIntentHandler,
-        TransfersIntentHandler,
-        DataIntentHandler,
-        SystemStatusIntentHandler,
-        HelpIntentHandler,
-        CancelAndStopIntentHandler,
-        SessionEndedRequestHandler)
-    .addErrorHandlers(ErrorHandler)
-    // .withPersistenceAdapter(
-    //     new persistenceAdapter.S3PersistenceAdapter({bucketName:'alexa-atlas'})
-    // )
-    .create();
+// const skill = Alexa.SkillBuilders.custom()
+//     .addRequestHandlers(
+//         LaunchRequestHandler,
+//         SetUsernameIntentHandler,
+//         SetSiteIntentHandler,
+//         GetSiteStatusIntentHandler,
+//         JobsIntentHandler,
+//         TasksIntentHandler,
+//         TransfersIntentHandler,
+//         DataIntentHandler,
+//         SystemStatusIntentHandler,
+//         HelpIntentHandler,
+//         CancelAndStopIntentHandler,
+//         SessionEndedRequestHandler)
+//     .addErrorHandlers(ErrorHandler)
+//     // .withPersistenceAdapter(
+//     //     new persistenceAdapter.S3PersistenceAdapter({bucketName:'alexa-atlas'})
+//     // )
+//     .create();
 
 
 // const adapter = new ExpressAdapter(skill, true, true);
