@@ -1,10 +1,10 @@
 // const Alexa = require('ask-sdk-core');
+// const { ExpressAdapter } = require('ask-sdk-express-adapter');
 
 const { dialogflow } = require('actions-on-google');
 
 const elasticsearch = require('@elastic/elasticsearch');
 const express = require('express');
-const { ExpressAdapter } = require('ask-sdk-express-adapter');
 const intervalParser = require('iso8601-duration');
 const D3Node = require('d3-node')
 
