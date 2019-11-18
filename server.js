@@ -5,9 +5,6 @@ const {
     Suggestions,
 } = require('actions-on-google');
 
-
-// const functions = require('firebase-functions');
-
 const express = require('express');
 const bodyParser = require('body-parser');
 
@@ -653,17 +650,126 @@ app.intent('Transfers', (conv) => {
     conv.response(speechText);
 });
 
-app.intent('SystemStatus', (conv) => {
+app.intent('SystemStatus', (conv, { ADC_system }) => {
+
+    console.info('asked for status of:', ADC_system);
+
+    if (ADC_system === 'Elastic') {
+        const es_resp = await es.cluster.health()
+        console.info('es response:', es_resp.body)
+        const es_status = es_resp.body.status;
+        const es_unassigned = es_resp.body.unassigned_shard;
+        let speechText = 'Elastic status is ' + es_status + '.';
+        if (es_status !== 'green') {
+            speechText += ' There are ' + es_unassigned.toString() + ' unassigned shards.';
+        }
+        console.info(speechText);
+        conv.response(speechText);
+        // return handlerInput.responseBuilder
+        //     .speak(speechText + getRandReprompt())
+        //     .reprompt(getRandReprompt())
+        //     .withSimpleCard('ATLAS computing - Elastic', speechText)
+        //     .getResponse();
+    };
+
+    if (ADC_system === 'fts') {
+        let speechText = 'fts status lookup not yet implemented.';
+        console.info(speechText);
+
+        conv.response(speechText);
+        // return handlerInput.responseBuilder
+        //     .speak(speechText + getRandReprompt())
+        //     .reprompt(getRandReprompt())
+        //     .withSimpleCard('ATLAS computing - FTS ', speechText)
+        //     .getResponse();
+    };
+
+    if (ADC_system === 'perfsonar') {
+        const ps_indices = {
+            'ps_meta': [24, 0, 0],
+            'ps_owd': [1, 0, 0],
+            'ps_packet_loss': [1, 0, 0],
+            'ps_retransmits': [1, 0, 0],
+            'ps_status': [1, 0, 0],
+            'ps_throughput': [1, 0, 0],
+            'ps_trace': [1, 0, 0]
+        }
+        const sub_end = new Date().getTime() - 9 * 86400 * 1000;
+
+        for (ind in ps_indices) {
+            console.info("Checking: ", ind);
+            const tbin = ps_indices[ind][0];
+
+            const ref_start = sub_end - tbin * 3 * 3600 * 1000;
+            const ref_end = sub_end - tbin * 3600 * 1000;
+            // console.info('reference interval:', ref_start, ' till ', ref_end);
+
+            let types_query = {
+                query: {
+                    bool: {
+                        filter: {
+                            range: { timestamp: { gt: ref_start, lte: ref_end } }
+                        }
+                    }
+                }
+            }
+
+            const es_res = await es.count({ index: ind, body: types_query })
+            // console.info(es_res.body.count);
+            ps_indices[ind][1] = es_res.body.count;
+
+            types_query = {
+                query: {
+                    bool: {
+                        filter: {
+                            range: { timestamp: { gt: ref_end, lte: sub_end } }
+                        }
+                    }
+                }
+            }
+
+            const es_res1 = await es.count({ index: ind, body: types_query })
+            ps_indices[ind][2] = es_res1.body.count;
+        }
+
+        console.info(ps_indices);
+
+        var issueFound = false;
+        var speechText = 'Issues detected in perfsonar data indexing.';
+        for (ind in ps_indices) {
+            if (ps_indices[ind][1] < 10) continue;
+            if (ps_indices[ind][2] < 10 || ps_indices[ind][2] / ps_indices[ind][1] < 0.25) {
+                issueFound = true;
+                speechText += ' Index ' + ind + ' now has ' + ps_indices[ind][2].toString();
+                speechText += ' documents, previously it had ' + (ps_indices[ind][1] / 2).toFixed(0) + '.';
+            }
+        }
+        if (issueFound === false) {
+            speechText = 'No issues with perfsonar data collection.';
+        }
+        console.info(speechText);
+
+        conv.response(speechText);
+        // return handlerInput.responseBuilder
+        //     .speak(speechText + getRandReprompt())
+        //     .reprompt(getRandReprompt())
+        //     .withSimpleCard('ATLAS computing - Perfsonar', speechText)
+        //     .getResponse();
+    }
+
+    if (ADC_system === 'frontier') {
+        let speechText = 'frontier status lookup not yet implemented.';
+        console.info(speechText);
+        conv.response(speechText);
+        // return handlerInput.responseBuilder
+        //     .speak(speechText + getRandReprompt())
+        //     .reprompt(getRandReprompt())
+        //     .withSimpleCard('ATLAS computing - Frontier', speechText)
+        //     .getResponse();
+    }
+
 });
 
-
-
-// Handle the Dialogflow intent named 'favorite fake color'.
-// The intent collects a parameter named 'fakeColor'.
-app.intent('favorite fake color', (conv, { fakeColor }) => {
-    // Present user with the corresponding basic card and end the conversation.
-    conv.close(`Here's the color`, new BasicCard(colorMap[fakeColor]));
-});
 
 expressApp.post('/fulfillment', app);
 
