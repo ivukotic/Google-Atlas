@@ -8,21 +8,10 @@ const {
 
 const functions = require('firebase-functions');
 
-
-const app = dialogflow({ debug: true });
-
-// Handle the Dialogflow intent named 'Default Welcome Intent'.
-app.intent('Default Welcome Intent', (conv) => {
-    // Asks the user's permission to know their name, for personalization.
-    conv.ask(new Permission({
-        context: 'Hi there, to get to know you better',
-        permissions: 'NAME',
-    }));
-});
-
+const express = require('express');
+const bodyParser = require('body-parser');
 
 const elasticsearch = require('@elastic/elasticsearch');
-const express = require('express');
 const intervalParser = require('iso8601-duration');
 const D3Node = require('d3-node')
 
@@ -34,7 +23,11 @@ const config = require('/etc/gaconf/config.json');
 
 es = new elasticsearch.Client({ node: config.ES_HOST, log: 'error' });
 
-// const app = express();
+
+
+const expressApp = express().use(bodyParser.json());
+
+const app = dialogflow({ debug: true });
 
 function humanFileSize(size) {
     var i = Math.floor(Math.log(size) / Math.log(1024));
@@ -611,11 +604,6 @@ const ErrorHandler = {
 //     .create();
 
 
-// const adapter = new ExpressAdapter(skill, true, true);
-
-// app.post('/', adapter.getRequestHandlers());
-
-
 // Handle the Dialogflow intent named 'favorite color'.
 // The intent collects a parameter named 'color'.
 app.intent('favorite color', (conv, { color }) => {
@@ -636,6 +624,26 @@ app.intent('favorite color', (conv, { color }) => {
     }
 });
 
+
+
+// // Handle the Dialogflow intent named 'Default Welcome Intent'.
+// app.intent('Default Welcome Intent', (conv) => {
+//     // Asks the user's permission to know their name, for personalization.
+//     conv.ask(new Permission({
+//         context: 'Hi there, to get to know you better',
+//         permissions: 'NAME',
+//     }));
+// });
+
+
+app.intent('Default Welcome Intent', (conv) => {
+    conv.ask('Welcome to number echo! Say a number.');
+});
+
+app.intent('Jobs', (conv, ) => {
+    conv.close(`You asked for jobs.`);
+});
+
 // Handle the Dialogflow intent named 'favorite fake color'.
 // The intent collects a parameter named 'fakeColor'.
 app.intent('favorite fake color', (conv, { fakeColor }) => {
@@ -643,15 +651,13 @@ app.intent('favorite fake color', (conv, { fakeColor }) => {
     conv.close(`Here's the color`, new BasicCard(colorMap[fakeColor]));
 });
 
-// Set the DialogflowApp object to handle the HTTPS POST request.
-exports.dialogflowFirebaseFulfillment = functions.https.onRequest(app);
+expressApp.post('/fulfillment', app);
 
-
-app.get('/healthz', function (_req, res) {
+expressApp.get('/healthz', function (_req, res) {
     res.status(200).send('OK');
 });
 
-app.listen(80);
+expressApp.listen(80);
 
 
 async function main() {
