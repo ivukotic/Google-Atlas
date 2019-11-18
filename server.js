@@ -6,7 +6,7 @@ const {
 } = require('actions-on-google');
 
 
-const functions = require('firebase-functions');
+// const functions = require('firebase-functions');
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -582,28 +582,6 @@ const ErrorHandler = {
     },
 };
 
-
-// const skill = Alexa.SkillBuilders.custom()
-//     .addRequestHandlers(
-//         LaunchRequestHandler,
-//         SetUsernameIntentHandler,
-//         SetSiteIntentHandler,
-//         GetSiteStatusIntentHandler,
-//         JobsIntentHandler,
-//         TasksIntentHandler,
-//         TransfersIntentHandler,
-//         DataIntentHandler,
-//         SystemStatusIntentHandler,
-//         HelpIntentHandler,
-//         CancelAndStopIntentHandler,
-//         SessionEndedRequestHandler)
-//     .addErrorHandlers(ErrorHandler)
-//     // .withPersistenceAdapter(
-//     //     new persistenceAdapter.S3PersistenceAdapter({bucketName:'alexa-atlas'})
-//     // )
-//     .create();
-
-
 // Handle the Dialogflow intent named 'favorite color'.
 // The intent collects a parameter named 'color'.
 app.intent('favorite color', (conv, { color }) => {
@@ -625,24 +603,60 @@ app.intent('favorite color', (conv, { color }) => {
 });
 
 
-
-// // Handle the Dialogflow intent named 'Default Welcome Intent'.
-// app.intent('Default Welcome Intent', (conv) => {
-//     // Asks the user's permission to know their name, for personalization.
-//     conv.ask(new Permission({
-//         context: 'Hi there, to get to know you better',
-//         permissions: 'NAME',
-//     }));
-// });
-
-
 app.intent('Default Welcome Intent', (conv) => {
-    conv.ask('Welcome to number echo! Say a number.');
+    console.info('application launched.');
+    const speechText = 'Welcome to the ATLAS computing info system! ' + getRandReprompt();
+    conv.ask(speechText);
+});
+
+app.intent('SetUsername', (conv, { username }) => {
+    console.info('asked to set username.');
+    conv.data.my_username = username;
+    // sessionAttributes.my_user_id = slots.username.resolutions.resolutionsPerAuthority[0].values[0].value.id.replace('^', ' ');
+    const speechText = `Your username has been set to ${username}.`;
+    const repromptText = `To get your jobs, say "get my jobs."`
+    conv.ask(speechText);
+});
+
+app.intent('SetSite', (conv, { sitename }) => {
+    console.info('asked to set site.');
+    conv.data.my_site = sitename;
+    // sessionAttributes.my_site_id = slots.sitename.resolutions.resolutionsPerAuthority[0].values[0].value.id;
+    const speechText = `Your site has been set to ${sitename}.`;
+    const repromptText = `To get jobs states at your site, say "get my site state."`;
+    conv.ask(speechText);
+});
+
+app.intent('GetSiteStatus', (conv) => {
 });
 
 app.intent('Jobs', (conv, ) => {
     conv.close(`You asked for jobs.`);
 });
+
+app.intent('Tasks', (conv, ) => {
+    conv.close(`You asked for Tasks.`);
+});
+
+app.intent('Data', (conv) => {
+    console.info('asked for data information');
+    const data_volume = humanFileSize(Math.random() * 1024 * 1024 * 1024 * 1024);
+    const speechText = 'Currently you have ' + data_volume + ' in your datasets.';
+    conv.response(speechText);
+});
+
+app.intent('Transfers', (conv) => {
+    console.info('asked for transfers information');
+    const data_volume = humanFileSize(Math.random() * 1024 * 1024 * 1024);
+    var speechText = data_volume + ' has been transfered.';
+    speechText = humanFileSize(Math.random() * 1024 * 1024 * 1024) + ' remains is waiting in queue.';
+    conv.response(speechText);
+});
+
+app.intent('SystemStatus', (conv) => {
+});
+
+
 
 // Handle the Dialogflow intent named 'favorite fake color'.
 // The intent collects a parameter named 'fakeColor'.
