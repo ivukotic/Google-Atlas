@@ -595,7 +595,7 @@ const skill = Alexa.SkillBuilders.custom()
 
 // const adapter = new ExpressAdapter(skill, true, true);
 
-app.post('/', adapter.getRequestHandlers());
+// app.post('/', adapter.getRequestHandlers());
 
 app.get('/healthz', function (_req, res) {
     res.status(200).send('OK');
