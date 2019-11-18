@@ -626,94 +626,97 @@ app.intent('SetSite', (conv, { sitename }) => {
     conv.ask(speechText);
 });
 
-app.intent('GetSiteStatus', async (conv, { sitename }) => {
+app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
 
     console.info('asked for site status.');
     console.info('conv.user.storage:', conv.user.storage);
     console.info('sitename:', sitename);
+
+    if (!conv.user.storage.my_site && sitename) {
+        conv.user.storage.my_site = sitename;
+    }
+
     if (conv.user.storage.my_site) {
+
         var speechText = `During last `;
 
         // const slots = handlerInput.requestEnvelope.request.intent.slots;
         // console.info(JSON.stringify(slots, null, 4));
 
-        // let start_in_utc = new Date().getTime() - 24 * 86400 * 1000;
-        // if (slots.interval.interval) {
-        //     console.info('interval: ', slots.interval.value);
-        //     const interval = intervalParser.toSeconds(intervalParser.parse(slots.interval.value));
-        //     start_in_utc = new Date().getTime() - interval * 1000;
-        //     speechText += slots.interval.value;
-        // }
-        // else {
-        //     speechText += 'day';
-        // }
+        let start_in_utc = new Date().getTime() - 24 * 86400 * 1000;
+        if (duration) {
+            console.info('duration: ', duration);
+            //     const interval = intervalParser.toSeconds(intervalParser.parse(slots.interval.value));
+            //     start_in_utc = new Date().getTime() - interval * 1000;
+            //     speechText += slots.interval.value;
+        }
+        else {
+            speechText += 'day';
+        }
 
-        // const sbody = {
-        //     index: 'jobs',
-        //     body: {
-        //         size: 0,
-        //         query: {
-        //             bool: {
-        //                 must: [
-        //                     { wildcard: { computingsite: `*${sessionAttributes.my_site_id}*` } },
-        //                     { range: { modificationtime: { gte: start_in_utc } } }
-        //                 ],
-        //             }
-        //         },
-        //         aggs: {
-        //             all_statuses: {
-        //                 terms: {
-        //                     field: "jobstatus"
-        //                 }
-        //             },
-        //             all_queues: {
-        //                 terms: {
-        //                     field: "computingsite"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-        // console.debug(JSON.stringify(sbody, null, 4));
-        // const es_resp = await es.search(sbody);
-        // console.debug('es response1:', es_resp.body.aggregations.all_statuses)
-        // console.debug('es response2:', es_resp.body.aggregations.all_queues)
-        // const sbuckets = es_resp.body.aggregations.all_statuses.buckets;
+        const sbody = {
+            index: 'jobs',
+            body: {
+                size: 0,
+                query: {
+                    bool: {
+                        must: [
+                            { wildcard: { computingsite: `*${sessionAttributes.my_site_id}*` } },
+                            { range: { modificationtime: { gte: start_in_utc } } }
+                        ],
+                    }
+                },
+                aggs: {
+                    all_statuses: {
+                        terms: {
+                            field: "jobstatus"
+                        }
+                    },
+                    all_queues: {
+                        terms: {
+                            field: "computingsite"
+                        }
+                    }
+                }
+            }
+        }
+        console.debug(JSON.stringify(sbody, null, 4));
+        const es_resp = await es.search(sbody);
+        console.debug('es response1:', es_resp.body.aggregations.all_statuses)
+        console.debug('es response2:', es_resp.body.aggregations.all_queues)
+        const sbuckets = es_resp.body.aggregations.all_statuses.buckets;
 
+        var totjobs = 0;
+        var details = 'Jobs are in following states:\n';
+        for (i in sbuckets) {
+            details += sbuckets[i].key + ' ' + sbuckets[i].doc_count.toString() + ',\n';
+            totjobs += sbuckets[i].doc_count;
+        }
+        speechText += `,\nsite ${sessionAttributes.my_site},\nhad ${totjobs} jobs.\n`
+        if (totjobs > 0) {
+            speechText += details;
+        }
 
-        // var totjobs = 0;
-        // var details = 'Jobs are in following states:\n';
-        // for (i in sbuckets) {
-        //     details += sbuckets[i].key + ' ' + sbuckets[i].doc_count.toString() + ',\n';
-        //     totjobs += sbuckets[i].doc_count;
-        // }
-        // speechText += `,\nsite ${sessionAttributes.my_site},\nhad ${totjobs} jobs.\n`
-        // if (totjobs > 0) {
-        //     speechText += details;
-        // }
-
-        // return handlerInput.responseBuilder
-        //     .speak(speechText + getRandReprompt())
-        //     .reprompt(getRandReprompt())
-        //     .withSimpleCard('ATLAS computing - site status', speechText)
-        //     .getResponse();
+        conv.ask(speechText);
     }
-
+    else {
+        conv.ask('You need to set site first. Try saying "set my site".');
+    }
 });
 
 app.intent('Jobs', async (conv, ) => {
-    conv.close(`You asked for jobs.`);
+    conv.ask(`You asked for jobs.`);
 });
 
 app.intent('Tasks', async (conv, ) => {
-    conv.close(`You asked for Tasks.`);
+    conv.ask(`You asked for Tasks.`);
 });
 
 app.intent('Data', (conv) => {
     console.info('asked for data information');
     const data_volume = humanFileSize(Math.random() * 1024 * 1024 * 1024 * 1024);
     const speechText = 'Currently you have ' + data_volume + ' in your datasets.';
-    conv.response(speechText);
+    conv.ask(speechText);
 });
 
 app.intent('Transfers', (conv) => {
@@ -721,7 +724,7 @@ app.intent('Transfers', (conv) => {
     const data_volume = humanFileSize(Math.random() * 1024 * 1024 * 1024);
     var speechText = data_volume + ' has been transfered.';
     speechText = humanFileSize(Math.random() * 1024 * 1024 * 1024) + ' remains is waiting in queue.';
-    conv.response(speechText);
+    conv.ask(speechText);
 });
 
 app.intent('SystemStatus', async (conv, { ADC_system }) => {
