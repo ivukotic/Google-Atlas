@@ -1,7 +1,25 @@
-// const Alexa = require('ask-sdk-core');
-// const { ExpressAdapter } = require('ask-sdk-express-adapter');
+const {
+    dialogflow,
+    BasicCard,
+    Permission,
+    Suggestions,
+} = require('actions-on-google');
 
-const { dialogflow } = require('actions-on-google');
+
+const functions = require('firebase-functions');
+
+
+const app = dialogflow({ debug: true });
+
+// Handle the Dialogflow intent named 'Default Welcome Intent'.
+app.intent('Default Welcome Intent', (conv) => {
+    // Asks the user's permission to know their name, for personalization.
+    conv.ask(new Permission({
+        context: 'Hi there, to get to know you better',
+        permissions: 'NAME',
+    }));
+});
+
 
 const elasticsearch = require('@elastic/elasticsearch');
 const express = require('express');
@@ -16,7 +34,7 @@ const config = require('/etc/gaconf/config.json');
 
 es = new elasticsearch.Client({ node: config.ES_HOST, log: 'error' });
 
-const app = express();
+// const app = express();
 
 function humanFileSize(size) {
     var i = Math.floor(Math.log(size) / Math.log(1024));
@@ -596,6 +614,38 @@ const ErrorHandler = {
 // const adapter = new ExpressAdapter(skill, true, true);
 
 // app.post('/', adapter.getRequestHandlers());
+
+
+// Handle the Dialogflow intent named 'favorite color'.
+// The intent collects a parameter named 'color'.
+app.intent('favorite color', (conv, { color }) => {
+    const luckyNumber = color.length;
+    const audioSound = 'https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg';
+    if (conv.data.userName) {
+        // If we collected user name previously, address them by name and use SSML
+        // to embed an audio snippet in the response.
+        conv.ask(`<speak>${conv.data.userName}, your lucky number is ` +
+            `${luckyNumber}.<audio src="${audioSound}"></audio> ` +
+            `Would you like to hear some fake colors?</speak>`);
+        conv.ask(new Suggestions('Yes', 'No'));
+    } else {
+        conv.ask(`<speak>Your lucky number is ${luckyNumber}.` +
+            `<audio src="${audioSound}"></audio> ` +
+            `Would you like to hear some fake colors?</speak>`);
+        conv.ask(new Suggestions('Yes', 'No'));
+    }
+});
+
+// Handle the Dialogflow intent named 'favorite fake color'.
+// The intent collects a parameter named 'fakeColor'.
+app.intent('favorite fake color', (conv, { fakeColor }) => {
+    // Present user with the corresponding basic card and end the conversation.
+    conv.close(`Here's the color`, new BasicCard(colorMap[fakeColor]));
+});
+
+// Set the DialogflowApp object to handle the HTTPS POST request.
+exports.dialogflowFirebaseFulfillment = functions.https.onRequest(app);
+
 
 app.get('/healthz', function (_req, res) {
     res.status(200).send('OK');
