@@ -1,6 +1,7 @@
 const {
     dialogflow,
     BasicCard,
+    Image,
     Permission,
     Suggestions,
 } = require('actions-on-google');
@@ -608,7 +609,7 @@ app.intent('Default Welcome Intent', (conv) => {
 
 app.intent('SetUsername', (conv, { username }) => {
     console.info('asked to set username.');
-    conv.data.my_username = username;
+    conv.user.storage.my_username = username;
     // sessionAttributes.my_user_id = slots.username.resolutions.resolutionsPerAuthority[0].values[0].value.id.replace('^', ' ');
     const speechText = `Your username has been set to ${username}.`;
     const repromptText = `To get your jobs, say "get my jobs."`
@@ -617,21 +618,94 @@ app.intent('SetUsername', (conv, { username }) => {
 
 app.intent('SetSite', (conv, { sitename }) => {
     console.info('asked to set site.');
-    conv.data.my_site = sitename;
+    // conv.data.my_site = sitename;
+    conv.user.storage.my_site = sitename;
     // sessionAttributes.my_site_id = slots.sitename.resolutions.resolutionsPerAuthority[0].values[0].value.id;
     const speechText = `Your site has been set to ${sitename}.`;
     const repromptText = `To get jobs states at your site, say "get my site state."`;
     conv.ask(speechText);
 });
 
-app.intent('GetSiteStatus', (conv) => {
+app.intent('GetSiteStatus', async (conv, { sitename }) => {
+
+    console.info('asked for site status.');
+    console.info('conv.user.storage:', conv.user.storage);
+    console.info('sitename:', sitename);
+    if (conv.user.storage.my_site) {
+        var speechText = `During last `;
+
+        // const slots = handlerInput.requestEnvelope.request.intent.slots;
+        // console.info(JSON.stringify(slots, null, 4));
+
+        // let start_in_utc = new Date().getTime() - 24 * 86400 * 1000;
+        // if (slots.interval.interval) {
+        //     console.info('interval: ', slots.interval.value);
+        //     const interval = intervalParser.toSeconds(intervalParser.parse(slots.interval.value));
+        //     start_in_utc = new Date().getTime() - interval * 1000;
+        //     speechText += slots.interval.value;
+        // }
+        // else {
+        //     speechText += 'day';
+        // }
+
+        // const sbody = {
+        //     index: 'jobs',
+        //     body: {
+        //         size: 0,
+        //         query: {
+        //             bool: {
+        //                 must: [
+        //                     { wildcard: { computingsite: `*${sessionAttributes.my_site_id}*` } },
+        //                     { range: { modificationtime: { gte: start_in_utc } } }
+        //                 ],
+        //             }
+        //         },
+        //         aggs: {
+        //             all_statuses: {
+        //                 terms: {
+        //                     field: "jobstatus"
+        //                 }
+        //             },
+        //             all_queues: {
+        //                 terms: {
+        //                     field: "computingsite"
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        // console.debug(JSON.stringify(sbody, null, 4));
+        // const es_resp = await es.search(sbody);
+        // console.debug('es response1:', es_resp.body.aggregations.all_statuses)
+        // console.debug('es response2:', es_resp.body.aggregations.all_queues)
+        // const sbuckets = es_resp.body.aggregations.all_statuses.buckets;
+
+
+        // var totjobs = 0;
+        // var details = 'Jobs are in following states:\n';
+        // for (i in sbuckets) {
+        //     details += sbuckets[i].key + ' ' + sbuckets[i].doc_count.toString() + ',\n';
+        //     totjobs += sbuckets[i].doc_count;
+        // }
+        // speechText += `,\nsite ${sessionAttributes.my_site},\nhad ${totjobs} jobs.\n`
+        // if (totjobs > 0) {
+        //     speechText += details;
+        // }
+
+        // return handlerInput.responseBuilder
+        //     .speak(speechText + getRandReprompt())
+        //     .reprompt(getRandReprompt())
+        //     .withSimpleCard('ATLAS computing - site status', speechText)
+        //     .getResponse();
+    }
+
 });
 
-app.intent('Jobs', (conv, ) => {
+app.intent('Jobs', async (conv, ) => {
     conv.close(`You asked for jobs.`);
 });
 
-app.intent('Tasks', (conv, ) => {
+app.intent('Tasks', async (conv, ) => {
     conv.close(`You asked for Tasks.`);
 });
 
@@ -650,7 +724,7 @@ app.intent('Transfers', (conv) => {
     conv.response(speechText);
 });
 
-app.intent('SystemStatus', (conv, { ADC_system }) => {
+app.intent('SystemStatus', async (conv, { ADC_system }) => {
 
     console.info('asked for status of:', ADC_system);
 
@@ -770,6 +844,14 @@ app.intent('SystemStatus', (conv, { ADC_system }) => {
 
 });
 
+app.fallback((conv) => {
+    conv.ask(`I couldn't understand. Can you say that again?`);
+});
+
+app.catch((conv, error) => {
+    console.error(error);
+    conv.ask('I encountered a glitch. Can you say that again?');
+});
 
 expressApp.post('/fulfillment', app);
 
