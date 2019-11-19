@@ -873,7 +873,7 @@ app.intent('SystemStatus', async (conv, { ADC_system }) => {
             speechText += ' There are ' + es_unassigned.toString() + ' unassigned shards.';
         }
         console.info(speechText);
-        conv.response(speechText);
+        conv.ask(speechText);
         // return handlerInput.responseBuilder
         //     .speak(speechText + getRandReprompt())
         //     .reprompt(getRandReprompt())
@@ -885,7 +885,7 @@ app.intent('SystemStatus', async (conv, { ADC_system }) => {
         let speechText = 'fts status lookup not yet implemented.';
         console.info(speechText);
 
-        conv.response(speechText);
+        conv.ask(speechText);
         // return handlerInput.responseBuilder
         //     .speak(speechText + getRandReprompt())
         //     .reprompt(getRandReprompt())
@@ -958,7 +958,7 @@ app.intent('SystemStatus', async (conv, { ADC_system }) => {
         }
         console.info(speechText);
 
-        conv.response(speechText);
+        conv.ask(speechText);
         // return handlerInput.responseBuilder
         //     .speak(speechText + getRandReprompt())
         //     .reprompt(getRandReprompt())
@@ -969,7 +969,7 @@ app.intent('SystemStatus', async (conv, { ADC_system }) => {
     if (ADC_system === 'frontier') {
         let speechText = 'frontier status lookup not yet implemented.';
         console.info(speechText);
-        conv.response(speechText);
+        conv.ask(speechText);
         // return handlerInput.responseBuilder
         //     .speak(speechText + getRandReprompt())
         //     .reprompt(getRandReprompt())
