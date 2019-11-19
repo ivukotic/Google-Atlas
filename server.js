@@ -74,75 +74,6 @@ function createHistogram(data) {
     canvas.pngStream().pipe(fs.createWriteStream('output.png'));
 }
 
-const LaunchRequestHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
-    },
-    handle(handlerInput) {
-        console.info('application launched.');
-        const speechText = 'Welcome to the ATLAS computing info system! ' + getRandReprompt();
-
-        return handlerInput.responseBuilder
-            .speak(speechText)
-            .reprompt(getRandReprompt())
-            .withSimpleCard('ATLAS computing', speechText)
-            .getResponse();
-    }
-};
-
-const SetUsernameIntentHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-            && handlerInput.requestEnvelope.request.intent.name === 'SetUsername';
-    },
-    handle(handlerInput) {
-        console.info('asked to set username.');
-
-        const slots = handlerInput.requestEnvelope.request.intent.slots;
-        console.info(JSON.stringify(slots, null, 4));
-
-        const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        sessionAttributes.my_username = slots.username.value;
-        sessionAttributes.my_user_id = slots.username.resolutions.resolutionsPerAuthority[0].values[0].value.id.replace('^', ' ');
-        handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
-
-        const speechText = `Your username has been set to ${slots.username.value}.`;
-        const repromptText = `To get your jobs, say "get my jobs."`;
-        return handlerInput.responseBuilder
-            .speak(speechText + getRandReprompt())
-            .reprompt(repromptText)
-            .withSimpleCard('ATLAS computing', speechText)
-            .getResponse();
-    }
-};
-
-const SetSiteIntentHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-            && handlerInput.requestEnvelope.request.intent.name === 'SetSite';
-    },
-    handle(handlerInput) {
-        console.info('asked to set site.');
-
-        const slots = handlerInput.requestEnvelope.request.intent.slots;
-        console.info(JSON.stringify(slots, null, 4));
-
-        const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        sessionAttributes.my_site = slots.sitename.value;
-        sessionAttributes.my_site_id = slots.sitename.resolutions.resolutionsPerAuthority[0].values[0].value.id;
-        handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
-
-        const speechText = `Your site has been set to ${slots.sitename.value}.`;
-        const repromptText = `To get jobs states at your site, say "get my site state."`;
-
-        return handlerInput.responseBuilder
-            .speak(speechText + getRandReprompt())
-            .withSimpleCard('ATLAS computing', speechText)
-            .reprompt(repromptText)
-            .getResponse();
-    }
-};
-
 
 const GetSiteStatusIntentHandler = {
     canHandle(handlerInput) {
@@ -541,34 +472,6 @@ const SystemStatusIntentHandler = {
     }
 };
 
-const CancelAndStopIntentHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-            && (handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent'
-                || handlerInput.requestEnvelope.request.intent.name === 'AMAZON.StopIntent');
-    },
-    handle(handlerInput) {
-        console.info('asked for stop.');
-        const speechText = 'Goodbye!';
-
-        return handlerInput.responseBuilder
-            .speak(speechText)
-            .withSimpleCard('ATLAS computing', speechText)
-            .getResponse();
-    }
-};
-
-const SessionEndedRequestHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
-    },
-    handle(handlerInput) {
-        console.info('session ended request.');
-        //any cleanup logic goes here
-        return handlerInput.responseBuilder.getResponse();
-    }
-};
-
 
 app.intent('Default Welcome Intent', (conv) => {
     console.info('application launched.');
@@ -589,8 +492,9 @@ app.intent('SetSite', (conv, { sitename }) => {
     console.info('asked to set site.');
     conv.user.storage.my_site = sitename;
     const speechText = `Your site has been set to ${sitename}.`;
-    // const repromptText = `To get jobs states at your site, say "get my site state."`;
+    const repromptText = `To get jobs states at your site, say "get my site state."`;
     conv.ask(speechText);
+    conv.ask(repromptText);
 });
 
 app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
@@ -644,7 +548,7 @@ app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
                 }
             }
         }
-        console.debug(JSON.stringify(sbody, null, 4));
+        // console.debug(JSON.stringify(sbody, null, 4));
         const es_resp = await es.search(sbody);
         console.debug('es response1:', es_resp.body.aggregations.all_statuses)
         console.debug('es response2:', es_resp.body.aggregations.all_queues)
@@ -662,6 +566,7 @@ app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
         }
 
         conv.ask(speechText);
+        conv.ask(getRandReprompt());
     }
     else {
         conv.ask('You need to set site first. Try saying "set my site".');
@@ -727,6 +632,7 @@ app.intent('Jobs', async (conv, { duration }) => {
 
         console.info(speechText);
         conv.ask(speechText);
+        conv.ask(getRandReprompt());
     }
     else {
         conv.ask('You need to set username first. Try saying "set my username".');
@@ -791,6 +697,7 @@ app.intent('Tasks', async (conv, { duration }) => {
 
         console.info(speechText);
         conv.ask(speechText);
+        conv.ask(getRandReprompt());
     }
     else {
         conv.ask('You need to set username first. Try saying "set my username".');
@@ -802,6 +709,7 @@ app.intent('Data', (conv) => {
     const data_volume = humanFileSize(Math.random() * 1024 * 1024 * 1024 * 1024);
     const speechText = 'Currently you have ' + data_volume + ' in your datasets.';
     conv.ask(speechText);
+    conv.ask(getRandReprompt());
 });
 
 app.intent('Transfers', (conv) => {
@@ -810,6 +718,7 @@ app.intent('Transfers', (conv) => {
     var speechText = data_volume + ' has been transfered.';
     speechText = humanFileSize(Math.random() * 1024 * 1024 * 1024) + ' remains is waiting in queue.';
     conv.ask(speechText);
+    conv.ask(getRandReprompt());
 });
 
 app.intent('SystemStatus', async (conv, { ADC_system }) => {
@@ -908,6 +817,7 @@ app.intent('SystemStatus', async (conv, { ADC_system }) => {
         conv.ask(speechText);
     }
 
+    conv.ask(getRandReprompt());
 });
 
 app.fallback((conv) => {
