@@ -659,7 +659,7 @@ app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
             console.info('duration: ', duration);
             const interval = getDuration(duration) * 1000;
             start_in_utc = new Date().getTime() - interval * 1000;
-            speechText += str(duration.amount) + duration.value;
+            speechText += duration.amount.toString() + duration.value;
         }
         else {
             speechText += 'day';
@@ -728,7 +728,7 @@ app.intent('Jobs', async (conv, { duration }) => {
             console.info('duration: ', duration);
             const interval = getDuration(duration) * 1000;
             start_in_utc = new Date().getTime() - interval * 1000;
-            speechText += str(duration.amount) + duration.value;
+            speechText += duration.amount.toString() + duration.value;
         }
         else {
             speechText += 'day';
@@ -793,7 +793,7 @@ app.intent('Tasks', async (conv, ) => {
             console.info('duration: ', duration);
             const interval = getDuration(duration) * 1000;
             start_in_utc = new Date().getTime() - interval * 1000;
-            speechText += str(duration.amount) + duration.value;
+            speechText += duration.amount.toString() + duration.value;
         }
         else {
             speechText += '7 days';
@@ -874,11 +874,6 @@ app.intent('SystemStatus', async (conv, { ADC_system }) => {
         }
         console.info(speechText);
         conv.ask(speechText);
-        // return handlerInput.responseBuilder
-        //     .speak(speechText + getRandReprompt())
-        //     .reprompt(getRandReprompt())
-        //     .withSimpleCard('ATLAS computing - Elastic', speechText)
-        //     .getResponse();
     };
 
     if (ADC_system === 'FTS') {
