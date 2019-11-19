@@ -724,7 +724,7 @@ app.intent('Jobs', async (conv, { duration }) => {
         var speechText = `During last `;
 
         let start_in_utc = new Date().getTime() - 24 * 86400 * 1000;
-        if (interval) {
+        if (duration) {
             console.info('duration: ', duration);
             const interval = getDuration(duration) * 1000;
             start_in_utc = new Date().getTime() - interval * 1000;
@@ -780,7 +780,7 @@ app.intent('Jobs', async (conv, { duration }) => {
     }
 });
 
-app.intent('Tasks', async (conv, ) => {
+app.intent('Tasks', async (conv, { duration }) => {
     console.info('asked for tasks.');
     console.info('conv.user.storage:', conv.user.storage);
 
@@ -789,7 +789,7 @@ app.intent('Tasks', async (conv, ) => {
         var speechText = `During last `;
 
         let start_in_utc = new Date().getTime() - 7 * 24 * 86400 * 1000;
-        if (interval) {
+        if (duration) {
             console.info('duration: ', duration);
             const interval = getDuration(duration) * 1000;
             start_in_utc = new Date().getTime() - interval * 1000;
