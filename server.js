@@ -41,8 +41,11 @@ function getDuration(d) {
         'wk': [7 * 86400, 'week'],
         'mo': [86400 * 30, 'month'],
     }
-    if (d.unit in dmap)
-        return [d.amount * dmap[d.unit][0] * 1000, dmap[d.unit][1]];
+    if (d.unit in dmap) {
+        var unit_text = dmap[d.unit][1];
+        if (d.amount > 0) unit_text += 's';
+        return [d.amount * dmap[d.unit][0] * 1000, unit_text];
+    }
     else {
         console.error('unrecognized unit:', d);
         return d.amount * 1000;
