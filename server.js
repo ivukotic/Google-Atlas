@@ -34,18 +34,18 @@ function humanFileSize(size) {
 
 function getDuration(d) {
     const dmap = {
-        's': 1,
-        'min': 60,
-        'h': 3600,
-        'day': 86400,
-        'wk': 7 * 86400,
-        'mo': 86400 * 30
+        's': [1, 'second'],
+        'min': [60, 'minute'],
+        'h': [3600, 'hour'],
+        'day': [86400, 'day'],
+        'wk': [7 * 86400, 'week'],
+        'mo': [86400 * 30, 'month'],
     }
     if (d.unit in dmap)
-        return d.amount * dmap[d.unit];
+        return [d.amount * dmap[d.unit][0] * 1000, dmap[d.unit][1]];
     else {
         console.error('unrecognized unit:', d);
-        return d.amount;
+        return d.amount * 1000;
     }
 }
 
@@ -538,23 +538,6 @@ const SystemStatusIntentHandler = {
     }
 };
 
-const HelpIntentHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-            && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
-    },
-    handle(handlerInput) {
-        console.info('asked for help.');
-        const speechText = 'You can say: get system status, set my site, set my username, my jobs in last week, tasks or transfers.';
-
-        return handlerInput.responseBuilder
-            .speak(speechText)
-            .reprompt(getRandReprompt())
-            .withSimpleCard('ATLAS computing', speechText)
-            .getResponse();
-    }
-};
-
 const CancelAndStopIntentHandler = {
     canHandle(handlerInput) {
         return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -583,40 +566,6 @@ const SessionEndedRequestHandler = {
     }
 };
 
-const ErrorHandler = {
-    canHandle() {
-        return true;
-    },
-    handle(handlerInput, error) {
-        console.log(`Error handled: ${error.message}`);
-
-        return handlerInput.responseBuilder
-            .speak('Sorry, I can\'t understand the command. Please say again.')
-            .reprompt('Sorry, I can\'t understand the command. Please say again.')
-            .getResponse();
-    },
-};
-
-// Handle the Dialogflow intent named 'favorite color'.
-// The intent collects a parameter named 'color'.
-app.intent('favorite color', (conv, { color }) => {
-    const luckyNumber = color.length;
-    const audioSound = 'https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg';
-    if (conv.data.userName) {
-        // If we collected user name previously, address them by name and use SSML
-        // to embed an audio snippet in the response.
-        conv.ask(`<speak>${conv.data.userName}, your lucky number is ` +
-            `${luckyNumber}.<audio src="${audioSound}"></audio> ` +
-            `Would you like to hear some fake colors?</speak>`);
-        conv.ask(new Suggestions('Yes', 'No'));
-    } else {
-        conv.ask(`<speak>Your lucky number is ${luckyNumber}.` +
-            `<audio src="${audioSound}"></audio> ` +
-            `Would you like to hear some fake colors?</speak>`);
-        conv.ask(new Suggestions('Yes', 'No'));
-    }
-});
-
 
 app.intent('Default Welcome Intent', (conv) => {
     console.info('application launched.');
@@ -628,8 +577,9 @@ app.intent('SetUsername', (conv, { username }) => {
     console.info('asked to set username.');
     conv.user.storage.my_username = username;
     const speechText = `Your username has been set to ${username}.`;
-    // const repromptText = `To get your jobs, say "get my jobs."`
+    const repromptText = `To get your jobs, say "get my jobs."`
     conv.ask(speechText);
+    conv.ask(repromptText);
 });
 
 app.intent('SetSite', (conv, { sitename }) => {
@@ -657,9 +607,9 @@ app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
         let start_in_utc = new Date().getTime() - 24 * 86400 * 1000;
         if (duration) {
             console.info('duration: ', duration);
-            const interval = getDuration(duration) * 1000;
-            start_in_utc = new Date().getTime() - interval * 1000;
-            speechText += duration.amount.toString() + duration.value;
+            const interval = getDuration(duration);
+            start_in_utc = new Date().getTime() - interval[0];
+            speechText += duration.amount.toString() + ' ' + interval[1];
         }
         else {
             speechText += 'day';
@@ -726,9 +676,9 @@ app.intent('Jobs', async (conv, { duration }) => {
         let start_in_utc = new Date().getTime() - 24 * 86400 * 1000;
         if (duration) {
             console.info('duration: ', duration);
-            const interval = getDuration(duration) * 1000;
-            start_in_utc = new Date().getTime() - interval * 1000;
-            speechText += duration.amount.toString() + duration.value;
+            const interval = getDuration(duration);
+            start_in_utc = new Date().getTime() - interval[0];
+            speechText += duration.amount.toString() + ' ' + interval[1];
         }
         else {
             speechText += 'day';
@@ -791,9 +741,9 @@ app.intent('Tasks', async (conv, { duration }) => {
         let start_in_utc = new Date().getTime() - 7 * 24 * 86400 * 1000;
         if (duration) {
             console.info('duration: ', duration);
-            const interval = getDuration(duration) * 1000;
-            start_in_utc = new Date().getTime() - interval * 1000;
-            speechText += duration.amount.toString() + duration.value;
+            const interval = getDuration(duration);
+            start_in_utc = new Date().getTime() - interval[0];
+            speechText += duration.amount.toString() + ' ' + interval[1];
         }
         else {
             speechText += '7 days';
