@@ -32,6 +32,23 @@ function humanFileSize(size) {
     return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
 };
 
+function getDuration(d) {
+    const dmap = {
+        's': 1,
+        'min': 60,
+        'h': 3600,
+        'day': 86400,
+        'wk': 7 * 86400,
+        'mo': 86400 * 30
+    }
+    if (d.unit in dmap)
+        return d.amount * dmap[d.unit];
+    else {
+        console.error('unrecognized unit:', d);
+        return d.amount;
+    }
+}
+
 function getRandReprompt() {
     const reprompts = [
         '\nTo learn all options say "Help".',
@@ -610,19 +627,16 @@ app.intent('Default Welcome Intent', (conv) => {
 app.intent('SetUsername', (conv, { username }) => {
     console.info('asked to set username.');
     conv.user.storage.my_username = username;
-    // sessionAttributes.my_user_id = slots.username.resolutions.resolutionsPerAuthority[0].values[0].value.id.replace('^', ' ');
     const speechText = `Your username has been set to ${username}.`;
-    const repromptText = `To get your jobs, say "get my jobs."`
+    // const repromptText = `To get your jobs, say "get my jobs."`
     conv.ask(speechText);
 });
 
 app.intent('SetSite', (conv, { sitename }) => {
     console.info('asked to set site.');
-    // conv.data.my_site = sitename;
     conv.user.storage.my_site = sitename;
-    // sessionAttributes.my_site_id = slots.sitename.resolutions.resolutionsPerAuthority[0].values[0].value.id;
     const speechText = `Your site has been set to ${sitename}.`;
-    const repromptText = `To get jobs states at your site, say "get my site state."`;
+    // const repromptText = `To get jobs states at your site, say "get my site state."`;
     conv.ask(speechText);
 });
 
@@ -632,7 +646,7 @@ app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
     console.info('conv.user.storage:', conv.user.storage);
     console.info('sitename:', sitename);
 
-    if (!conv.user.storage.my_site && sitename) {
+    if (sitename) {
         conv.user.storage.my_site = sitename;
     }
 
@@ -640,15 +654,12 @@ app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
 
         var speechText = `During last `;
 
-        // const slots = handlerInput.requestEnvelope.request.intent.slots;
-        // console.info(JSON.stringify(slots, null, 4));
-
         let start_in_utc = new Date().getTime() - 24 * 86400 * 1000;
         if (duration) {
             console.info('duration: ', duration);
-            //     const interval = intervalParser.toSeconds(intervalParser.parse(slots.interval.value));
-            //     start_in_utc = new Date().getTime() - interval * 1000;
-            //     speechText += slots.interval.value;
+            const interval = getDuration(duration) * 1000;
+            start_in_utc = new Date().getTime() - interval * 1000;
+            speechText += str(duration.amount) + duration.value;
         }
         else {
             speechText += 'day';
@@ -704,12 +715,133 @@ app.intent('GetSiteStatus', async (conv, { sitename, duration }) => {
     }
 });
 
-app.intent('Jobs', async (conv, ) => {
-    conv.ask(`You asked for jobs.`);
+app.intent('Jobs', async (conv, { duration }) => {
+    console.info('asked for jobs.');
+    console.info('conv.user.storage:', conv.user.storage);
+
+    if (conv.user.storage.my_username) {
+
+        var speechText = `During last `;
+
+        let start_in_utc = new Date().getTime() - 24 * 86400 * 1000;
+        if (interval) {
+            console.info('duration: ', duration);
+            const interval = getDuration(duration) * 1000;
+            start_in_utc = new Date().getTime() - interval * 1000;
+            speechText += str(duration.amount) + duration.value;
+        }
+        else {
+            speechText += 'day';
+        }
+
+
+        const sbody = {
+            index: 'jobs',
+            body: {
+                size: 0,
+                query: {
+                    bool: {
+                        must: [
+                            { match: { produsername: conv.user.storage.my_username } },
+                            { range: { modificationtime: { gte: start_in_utc } } }
+                        ],
+                    }
+                },
+                aggs: {
+                    all_statuses: {
+                        terms: {
+                            field: "jobstatus"
+                        }
+                    }
+                }
+            }
+        }
+        console.debug(JSON.stringify(sbody, null, 4));
+        const es_resp = await es.search(sbody);
+        console.debug('es response:', es_resp.body.aggregations.all_statuses)
+        const buckets = es_resp.body.aggregations.all_statuses.buckets;
+
+        var totjobs = 0;
+        var details = 'Jobs are in following states:\n';
+        for (i in buckets) {
+            details += buckets[i].key + ' ' + buckets[i].doc_count.toString() + ',\n';
+            totjobs += buckets[i].doc_count;
+        }
+        speechText += `,\nuser ${conv.user.storage.my_username},\nhad ${totjobs} jobs.\n`
+        if (totjobs > 0) {
+            speechText += details;
+        }
+
+        console.info(speechText);
+        conv.ask(speechText);
+    }
+    else {
+        conv.ask('You need to set username first. Try saying "set my username".');
+    }
 });
 
 app.intent('Tasks', async (conv, ) => {
-    conv.ask(`You asked for Tasks.`);
+    console.info('asked for tasks.');
+    console.info('conv.user.storage:', conv.user.storage);
+
+    if (conv.user.storage.my_username) {
+
+        var speechText = `During last `;
+
+        let start_in_utc = new Date().getTime() - 7 * 24 * 86400 * 1000;
+        if (interval) {
+            console.info('duration: ', duration);
+            const interval = getDuration(duration) * 1000;
+            start_in_utc = new Date().getTime() - interval * 1000;
+            speechText += str(duration.amount) + duration.value;
+        }
+        else {
+            speechText += '7 days';
+        }
+
+
+        const sbody = {
+            index: 'tasks',
+            body: {
+                size: 0,
+                query: {
+                    bool: {
+                        must: [
+                            { match: { produsername: conv.user.storage.my_username } },
+                            { range: { modificationtime: { gte: start_in_utc } } }
+                        ],
+                    }
+                },
+                aggs: {
+                    all_statuses: {
+                        terms: {
+                            field: "status"
+                        }
+                    }
+                }
+            }
+        };
+
+        const es_resp = await es.search(sbody);
+        console.info('es response:', es_resp.body.aggregations.all_statuses)
+        const buckets = es_resp.body.aggregations.all_statuses.buckets;
+        var tottasks = 0;
+        var details = 'Tasks are in following states:\n';
+        for (i in buckets) {
+            details += buckets[i].key + ' ' + buckets[i].doc_count.toString() + ',\n';
+            tottasks += buckets[i].doc_count;
+        }
+        speechText += `,\nuser ${conv.user.storage.my_username},\nhad ${tottasks} tasks.\n`
+        if (tottasks > 0) {
+            speechText += details;
+        }
+
+        console.info(speechText);
+        conv.ask(speechText);
+    }
+    else {
+        conv.ask('You need to set username first. Try saying "set my username".');
+    }
 });
 
 app.intent('Data', (conv) => {
