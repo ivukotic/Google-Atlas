@@ -881,19 +881,13 @@ app.intent('SystemStatus', async (conv, { ADC_system }) => {
         //     .getResponse();
     };
 
-    if (ADC_system === 'fts') {
+    if (ADC_system === 'FTS') {
         let speechText = 'fts status lookup not yet implemented.';
         console.info(speechText);
-
         conv.ask(speechText);
-        // return handlerInput.responseBuilder
-        //     .speak(speechText + getRandReprompt())
-        //     .reprompt(getRandReprompt())
-        //     .withSimpleCard('ATLAS computing - FTS ', speechText)
-        //     .getResponse();
     };
 
-    if (ADC_system === 'perfsonar') {
+    if (ADC_system === 'Perfsonar') {
         const ps_indices = {
             'ps_meta': [24, 0, 0],
             'ps_owd': [1, 0, 0],
@@ -957,24 +951,13 @@ app.intent('SystemStatus', async (conv, { ADC_system }) => {
             speechText = 'No issues with perfsonar data collection.';
         }
         console.info(speechText);
-
         conv.ask(speechText);
-        // return handlerInput.responseBuilder
-        //     .speak(speechText + getRandReprompt())
-        //     .reprompt(getRandReprompt())
-        //     .withSimpleCard('ATLAS computing - Perfsonar', speechText)
-        //     .getResponse();
     }
 
-    if (ADC_system === 'frontier') {
-        let speechText = 'frontier status lookup not yet implemented.';
+    if (ADC_system === 'Frontier') {
+        let speechText = 'Frontier status lookup not yet implemented.';
         console.info(speechText);
         conv.ask(speechText);
-        // return handlerInput.responseBuilder
-        //     .speak(speechText + getRandReprompt())
-        //     .reprompt(getRandReprompt())
-        //     .withSimpleCard('ATLAS computing - Frontier', speechText)
-        //     .getResponse();
     }
 
 });
