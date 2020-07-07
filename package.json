@@ -34,7 +34,7 @@
     "fs": "0.0.1-security",
     "https": "^1.0.0",
     "iso8601-duration": "^1.2.0",
-    "npm": "^6.13.0",
+    "npm": "^6.14.6",
     "actions-on-google": "^2.0.0",
     "firebase-admin": "^8.2.0",
     "firebase-functions": "^3.1.0"
