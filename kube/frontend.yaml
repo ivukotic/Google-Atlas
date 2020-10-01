@@ -8,10 +8,10 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - name: http
-    protocol: TCP
-    port: 80
-    targetPort: 80
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
   selector:
     k8s-app: google-atlas
 ---
@@ -24,25 +24,25 @@ metadata:
     k8s-app: google-atlas
   annotations:
     kubernetes.io/ingress.class: slate
-    certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   tls:
-  - hosts:
-    - google.atlas-ml.org
-    secretName: auto-generated-google-atlas
+    - hosts:
+        - google.atlas-ml.org
+      secretName: auto-generated-google-atlas
   rules:
-  - host: google.atlas-ml.org
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: google-atlas
-          servicePort: 80
+    - host: google.atlas-ml.org
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: google-atlas
+              servicePort: 80
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: google-atlas  
+  name: google-atlas
   namespace: aaas
   labels:
     k8s-app: google-atlas
@@ -57,25 +57,25 @@ spec:
         k8s-app: google-atlas
     spec:
       containers:
-      - name: google-atlas
-        image: ivukotic/google-atlas:latest
-        ports:
-          - containerPort: 80
-        livenessProbe:
-          httpGet:
-            scheme: HTTP
-            path: /healthz
-            port: 80
-          periodSeconds: 60
-          initialDelaySeconds: 60
-          timeoutSeconds: 10
-        volumeMounts:
-        - name: frontend-conf-volume
-          mountPath: "/etc/gaconf/"
+        - name: google-atlas
+          image: ivukotic/google-atlas:latest
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /healthz
+              port: 80
+            periodSeconds: 60
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+          volumeMounts:
+            - name: frontend-conf-volume
+              mountPath: "/etc/gaconf/"
       volumes:
-      - name: frontend-conf-volume
-        secret:
-          secretName: gaconfig
-          items:
-          - key: gaconf
-            path: config.json
+        - name: frontend-conf-volume
+          secret:
+            secretName: gaconfig
+            items:
+              - key: gaconf
+                path: config.json
