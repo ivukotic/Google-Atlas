@@ -11,10 +11,10 @@ const bodyParser = require('body-parser');
 
 const elasticsearch = require('@elastic/elasticsearch');
 const intervalParser = require('iso8601-duration');
-const D3Node = require('d3-node')
+// const D3Node = require('d3-node')
 
-const canvasModule = require('canvas');
-const d3n = new D3Node({ canvasModule });
+// const canvasModule = require('canvas');
+// const d3n = new D3Node({ canvasModule });
 
 const config = require('/etc/gaconf/config.json');
 // const config = require('./kube/secrets/config.json');
@@ -68,11 +68,11 @@ function getRandReprompt() {
     return (reprompts[Math.floor(Math.random() * reprompts.length)])
 }
 
-function createHistogram(data) {
-    const canvas = d3n.createCanvas(960, 500);
-    const context = canvas.getContext('2d');
-    canvas.pngStream().pipe(fs.createWriteStream('output.png'));
-}
+// function createHistogram(data) {
+//     const canvas = d3n.createCanvas(960, 500);
+//     const context = canvas.getContext('2d');
+//     canvas.pngStream().pipe(fs.createWriteStream('output.png'));
+// }
 
 
 const GetSiteStatusIntentHandler = {
