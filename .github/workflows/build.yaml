@@ -15,7 +15,7 @@ jobs:
       - name: Docker Build & Push Action
         uses: mr-smithers-excellent/docker-build-push@v5.6
         with:
-          image: ivukotic/alexa-atlas
+          image: ivukotic/google-atlas
           dockerfile: Dockerfile
           tags: latest, ${{ github.sha }}
           registry: docker.io
